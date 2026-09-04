@@ -1,0 +1,2853 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FitAI</title>
+    
+    <!-- PWA мета-теги -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Твой ИИ-тренер по фитнесу и здоровью">
+    
+    <!-- iOS PWA мета-теги -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FitAI">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- Иконки -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-attachment: fixed;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            border-radius: 20px;
+        }
+
+        .header-title { flex: 1; text-align: center; }
+        h1 { color: white; font-size: 2.2em; font-weight: 800; margin-bottom: 3px; }
+        .subtitle { color: rgba(255, 255, 255, 0.9); font-size: 0.95em; }
+
+        .user-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .user-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .user-avatar-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            overflow: hidden;
+        }
+
+        .user-avatar-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .settings-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            opacity: 0; visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .settings-overlay.active { opacity: 1; visibility: visible; }
+
+        .profile-panel {
+            position: fixed; top: 0; right: -400px;
+            width: 380px; max-width: 90%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 999;
+            padding: 30px;
+            transition: right 0.4s ease;
+            overflow-y: auto;
+        }
+
+        .profile-panel.active { right: 0; }
+
+        .profile-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; padding-bottom: 12px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .profile-title { font-size: 1.4em; font-weight: 800; color: #333; }
+
+        .close-profile {
+            background: #f0f8ff;
+            border: none;
+            width: 36px; height: 36px; border-radius: 10px;
+            font-size: 1.1em; cursor: pointer;
+        }
+
+        .profile-avatar-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4FC3F7, #29b6f6);
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8em;
+            box-shadow: 0 6px 20px rgba(79, 195, 247, 0.4);
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-avatar::after {
+            content: '📷';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.6);
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.45em;
+        }
+
+        .profile-name {
+            font-size: 1.4em;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .upload-hint {
+            font-size: 0.7em;
+            color: #999;
+        }
+
+        .profile-section {
+            margin-bottom: 18px;
+        }
+
+        .profile-section-title {
+            font-size: 0.95em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .profile-form .form-group { margin-bottom: 10px; }
+
+        .profile-form label {
+            display: block; color: #666;
+            font-size: 0.75em; font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .profile-form input {
+            width: 100%; padding: 9px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px; font-size: 0.9em;
+        }
+
+        .body-carousel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .carousel-arrow {
+            background: rgba(79, 195, 247, 0.2);
+            border: 1px solid rgba(79, 195, 247, 0.4);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #4FC3F7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .carousel-arrow:hover {
+            background: rgba(79, 195, 247, 0.3);
+            transform: scale(1.1);
+        }
+
+        .carousel-card {
+            flex: 1;
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-card.selected {
+            border-color: #4FC3F7;
+            box-shadow: 0 4px 15px rgba(79, 195, 247, 0.3);
+        }
+
+        .carousel-image {
+            width: 100%;
+            height: 120px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            background: #f0f8ff;
+        }
+
+        .carousel-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .carousel-label {
+            font-size: 0.9em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .carousel-desc {
+            font-size: 0.7em;
+            color: #999;
+        }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ddd;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-dot.active {
+            background: #4FC3F7;
+            width: 20px;
+            border-radius: 4px;
+        }
+
+        .tabs {
+            display: flex; gap: 8px; margin-bottom: 20px; padding: 10px;
+            border-radius: 20px;
+        }
+
+        .tab {
+            flex: 1; padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            font-size: 0.85em; font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .activity-main-card {
+            padding: 15px;
+            border-radius: 25px;
+            margin-bottom: 15px;
+        }
+
+        .activity-main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+
+        .activity-main-title {
+            font-size: 1.1em;
+            font-weight: 800;
+            color: white;
+        }
+
+        .activity-main-date { color: rgba(255, 255, 255, 0.8); font-size: 0.8em; }
+
+        .activity-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .steps-column, .calories-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 10px;
+        }
+
+        .circle-section-title {
+            font-size: 0.85em;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .steps-circle-container {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin-bottom: 8px;
+        }
+
+        .steps-circle {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .circle-bg { fill: none; stroke-width: 8; stroke: rgba(255, 255, 255, 0.15); }
+        .circle-progress {
+            fill: none; stroke-width: 8; stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .circle-center {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .circle-count { font-size: 1.6em; font-weight: 800; color: white; }
+        .circle-label { color: rgba(255, 255, 255, 0.8); font-size: 0.7em; }
+
+        .legend-compact {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .legend-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 5px 3px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .legend-item:hover { background: rgba(255, 255, 255, 0.25); }
+
+        .legend-item.editing {
+            background: rgba(255, 255, 255, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+            margin: 0 auto 2px;
+        }
+
+        .legend-label {
+            font-size: 0.6em;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+        }
+
+        .legend-value {
+            font-size: 0.75em; font-weight: 800; color: white;
+        }
+
+        .legend-input {
+            width: 100%;
+            font-size: 0.75em;
+            font-weight: 800;
+            color: white;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 6px;
+            padding: 3px;
+            outline: none;
+        }
+
+        .distance-tile, .balance-tile {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 8px 12px;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .distance-value {
+            font-size: 1.3em;
+            font-weight: 800;
+            color: white;
+        }
+
+        .distance-unit, .distance-sub {
+            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .distance-sub { font-size: 0.65em; color: rgba(255, 255, 255, 0.7); margin-top: 2px; }
+
+        .balance-comparison {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .balance-side {
+            text-align: center;
+            padding: 4px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .balance-side-label { font-size: 0.6em; color: rgba(255, 255, 255, 0.8); }
+        .balance-side-value { font-size: 0.95em; font-weight: 800; color: white; }
+        .balance-arrow { color: rgba(255, 255, 255, 0.6); font-size: 1em; }
+
+        .balance-bar-wrapper {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 6px;
+            position: relative;
+        }
+
+        .balance-bar-eaten, .balance-bar-burned {
+            position: absolute;
+            top: 0; height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .balance-bar-eaten {
+            left: 0;
+            background: linear-gradient(90deg, #FF6B6B, #FF8E8E);
+            border-radius: 6px 0 0 6px;
+        }
+
+        .balance-bar-burned {
+            right: 0;
+            background: linear-gradient(90deg, #4ECDC4, #44A3AA);
+            border-radius: 0 6px 6px 0;
+        }
+
+        .balance-status {
+            font-size: 0.65em;
+            font-weight: 700;
+            padding: 4px;
+            border-radius: 6px;
+            color: white;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .health-section {
+            margin-bottom: 12px;
+        }
+
+        .health-section-title {
+            font-size: 0.9em;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .health-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .health-card:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .health-card.editing {
+            background: rgba(255, 255, 255, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .health-icon {
+            font-size: 1.3em;
+            margin-bottom: 4px;
+        }
+
+        .health-title {
+            font-size: 0.65em;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 3px;
+        }
+
+        .health-value {
+            font-size: 1em;
+            font-weight: 800;
+            color: white;
+        }
+
+        .health-unit {
+            font-size: 0.6em;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .health-input {
+            width: 100%;
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 4px;
+            color: white;
+            font-size: 0.7em;
+            text-align: center;
+            margin-top: 4px;
+            outline: none;
+        }
+
+        .health-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .health-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .health-metric {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px 6px;
+            text-align: center;
+        }
+
+        .health-metric-icon {
+            font-size: 1.3em;
+            margin-bottom: 4px;
+        }
+
+        .health-metric-title {
+            font-size: 0.65em;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 3px;
+        }
+
+        .health-metric-value {
+            font-size: 1em;
+            font-weight: 800;
+            color: white;
+        }
+
+        .health-metric-status {
+            font-size: 0.6em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 3px;
+            display: inline-block;
+        }
+
+        .meal-section-title {
+            font-size: 1.1em;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .total-eaten-tile {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.4), rgba(255, 142, 142, 0.3));
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 18px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .total-eaten-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .total-eaten-icon {
+            font-size: 2.2em;
+        }
+
+        .total-eaten-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .total-eaten-label {
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+        }
+
+        .total-eaten-value {
+            font-size: 2em;
+            font-weight: 800;
+            color: white;
+            line-height: 1.1;
+        }
+
+        .total-eaten-right {
+            text-align: right;
+        }
+
+        .total-eaten-meals {
+            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 4px;
+        }
+
+        .total-eaten-bar {
+            width: 120px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .total-eaten-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B6B, #FFD700);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .meal-accordion { margin-bottom: 8px; }
+
+        .meal-row {
+            padding: 12px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .meal-row:hover { background: rgba(255, 255, 255, 0.25); }
+
+        .meal-row.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .meal-row-info { display: flex; align-items: center; gap: 10px; flex: 1; }
+        .meal-row-icon { width: 30px; height: 30px; }
+        .meal-row-icon svg { width: 100%; height: 100%; }
+        .meal-row-text { display: flex; flex-direction: column; }
+        .meal-row-title { font-size: 0.95em; font-weight: 800; color: white; }
+        .meal-row-count { font-size: 0.75em; color: rgba(255, 255, 255, 0.8); }
+
+        .meal-row-calories {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+
+        .meal-row-arrow {
+            font-size: 1em;
+            color: rgba(255, 255, 255, 0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .meal-row.active .meal-row-arrow { transform: rotate(180deg); }
+
+        .meal-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0 0 15px 15px;
+            margin-top: -3px;
+        }
+
+        .meal-content.active {
+            max-height: 2000px;
+            margin-top: 0;
+        }
+
+        .meal-content-inner { padding: 12px; }
+
+        .meal-list { display: grid; gap: 6px; margin-bottom: 10px; }
+
+        .meal-item {
+            background: #f8f9fa;
+            padding: 8px 10px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .meal-info { flex: 1; }
+        .meal-name { font-weight: 700; color: #333; font-size: 0.85em; }
+        .meal-details { font-size: 0.65em; color: #666; }
+        .meal-calories { font-size: 0.9em; font-weight: 800; color: #4FC3F7; margin-right: 8px; }
+
+        .meal-delete {
+            background: #ff5252;
+            color: white;
+            border: none;
+            width: 24px; height: 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .empty-meal-content {
+            text-align: center;
+            padding: 10px;
+            color: #999;
+            font-style: italic;
+            font-size: 0.85em;
+        }
+
+        .add-meal-form-inline {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .search-container { position: relative; margin-bottom: 10px; }
+
+        .search-input {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-top: 4px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .search-dropdown.active { display: block; }
+
+        .search-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+        }
+
+        .search-item:hover { background: #f0f8ff; }
+        .search-item:last-child { border-bottom: none; }
+        .search-item-name { font-weight: 600; color: #333; }
+        .search-item-cal { font-weight: 700; color: #4FC3F7; }
+
+        .meal-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .meal-form-row input {
+            padding: 8px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.85em;
+        }
+
+        .calories-preview {
+            background: #e3f2fd;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.85em;
+        }
+
+        .add-meal-btn {
+            background: #4FC3F7;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .add-meal-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .manual-toggle {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 0.75em;
+            color: #4FC3F7;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .workouts-toggle {
+            border-radius: 20px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .workouts-toggle-header {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .workouts-toggle-title {
+            font-size: 1em;
+            font-weight: 800;
+            color: white;
+        }
+
+        .workouts-toggle-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 700;
+            color: white;
+        }
+
+        .workouts-toggle-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            padding: 0 20px;
+        }
+
+        .workouts-toggle.expanded .workouts-toggle-content {
+            max-height: 2000px;
+            padding: 0 20px 15px;
+        }
+
+        .workouts-list {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .workout-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .workout-item-name { font-weight: 700; font-size: 0.9em; }
+        .workout-item-date { font-size: 0.7em; opacity: 0.8; }
+
+        .add-workout-btn-compact {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px;
+            font-size: 0.9em;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .form-container {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .form-container.active { display: block; }
+
+        .form-group { margin-bottom: 10px; }
+
+        .form-group label {
+            display: block; color: #333;
+            font-weight: 600; margin-bottom: 4px;
+            font-size: 0.85em;
+        }
+
+        .form-group input {
+            width: 100%; padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .exercise-list { margin-bottom: 10px; }
+
+        .exercise-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 6px;
+        }
+
+        .exercise-item input {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.85em;
+        }
+
+        .remove-exercise {
+            background: #ff5252;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .add-exercise-btn {
+            background: #e3f2fd;
+            color: #4FC3F7;
+            border: 2px dashed #4FC3F7;
+            padding: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .save-btn {
+            background: #4FC3F7;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 0.95em;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .stats-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .control-btn.active {
+            background: rgba(76, 175, 80, 0.5);
+            border-color: rgba(76, 175, 80, 0.7);
+        }
+
+        .chart-container-improved {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .chart-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .line-chart-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            margin-bottom: 10px;
+        }
+
+        .line-chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-grid-line {
+            stroke: rgba(255, 255, 255, 0.15);
+            stroke-width: 1;
+        }
+
+        .chart-axis-line {
+            stroke: rgba(255, 255, 255, 0.3);
+            stroke-width: 2;
+        }
+
+        .chart-line {
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .chart-dot {
+            stroke-width: 2;
+        }
+
+        .chart-label {
+            font-size: 11px;
+            fill: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+        }
+
+        .chart-value-label {
+            font-size: 10px;
+            fill: white;
+            font-weight: 700;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .chart-legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .stats-tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .stats-tab {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer;
+            color: white;
+        }
+
+        .stats-tab.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .stats-tab-icon { font-size: 1.3em; margin-bottom: 4px; }
+        .stats-tab-label { font-size: 0.7em; font-weight: 700; }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.4s ease;
+            font-size: 0.9em;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .activity-grid { grid-template-columns: 1fr; }
+            .meal-form-row { grid-template-columns: 1fr; }
+            .exercise-item { grid-template-columns: 1fr; }
+            .stats-tabs { grid-template-columns: repeat(3, 1fr); }
+            .health-grid { grid-template-columns: repeat(3, 1fr); }
+            .health-metrics { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="glass">
+            <button class="user-btn" onclick="openProfile()">
+                <div class="user-avatar-small" id="headerAvatar"></div>
+                <span id="headerUserName">Гость</span>
+            </button>
+            <div class="header-title">
+                <h1>FitAI</h1>
+                <p class="subtitle">Твой ИИ-тренер по фитнесу и здоровью</p>
+            </div>
+            <div style="width: 100px;"></div>
+        </header>
+
+        <div class="settings-overlay" id="settingsOverlay" onclick="closeProfile()"></div>
+        <div class="profile-panel" id="profilePanel">
+            <div class="profile-header">
+                <div class="profile-title">👤 Профиль</div>
+                <button class="close-profile" onclick="closeProfile()">✕</button>
+            </div>
+
+            <div class="profile-avatar-section">
+                <div class="profile-avatar" id="profileAvatar" onclick="document.getElementById('avatarUpload').click()">
+                    <span id="avatarEmoji">👤</span>
+                </div>
+                <input type="file" id="avatarUpload" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
+                <div class="profile-name" id="profileName">Гость</div>
+                <div class="upload-hint">Нажми на фото, чтобы загрузить</div>
+            </div>
+
+            <div class="profile-section">
+                <div class="profile-section-title"> Личные данные</div>
+                <div class="profile-form">
+                    <div class="form-group">
+                        <label>Имя</label>
+                        <input type="text" id="profileNameInput" placeholder="Как к тебе обращаться?" onblur="saveProfileField('name')">
+                    </div>
+                    <div class="form-group">
+                        <label>Возраст</label>
+                        <input type="number" id="profileAge" placeholder="25" onblur="saveProfileField('age')">
+                    </div>
+                    <div class="form-group">
+                        <label>Рост (см)</label>
+                        <input type="number" id="profileHeight" placeholder="175" onblur="saveProfileField('height')">
+                    </div>
+                    <div class="form-group">
+                        <label>Вес (кг)</label>
+                        <input type="number" id="profileWeight" placeholder="70" step="0.1" onblur="saveProfileField('weight')">
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <div class="profile-section-title">🏋️ Строение тела</div>
+                <div class="body-carousel">
+                    <button class="carousel-arrow" onclick="changeBodyType(-1)">◀</button>
+                    <div class="carousel-card" id="carouselCard">
+                        <div class="carousel-image">
+                            <img id="carouselImage" src="" alt="">
+                        </div>
+                        <div class="carousel-label" id="carouselLabel">—</div>
+                        <div class="carousel-desc" id="carouselDesc">—</div>
+                    </div>
+                    <button class="carousel-arrow" onclick="changeBodyType(1)">▶</button>
+                </div>
+                <div class="carousel-dots" id="carouselDots"></div>
+            </div>
+        </div>
+
+        <div class="tabs glass">
+            <button class="tab active" onclick="switchTab('activities')">🏃 Активности</button>
+            <button class="tab" onclick="switchTab('nutrition')">🍽️ Питание</button>
+            <button class="tab" onclick="switchTab('health')">❤️ Здоровье</button>
+            <button class="tab" onclick="switchTab('statistics')">📊 Статистика</button>
+        </div>
+
+        <div id="activities-tab" class="tab-content active">
+            <div class="activity-main-card glass">
+                <div class="activity-main-header">
+                    <div class="activity-main-title">📊 Сегодня</div>
+                    <div class="activity-main-date" id="stepsDate"></div>
+                </div>
+                <div class="activity-grid">
+                    <div class="steps-column">
+                        <div class="circle-section-title">👟 Шаги</div>
+                        <div class="steps-circle-container">
+                            <svg class="steps-circle" viewBox="0 0 200 200">
+                                <circle class="circle-bg" cx="100" cy="100" r="80"/>
+                                <circle class="circle-bg" cx="100" cy="100" r="65"/>
+                                <circle class="circle-bg" cx="100" cy="100" r="50"/>
+                                <circle class="circle-progress" id="stepsNormProgress" cx="100" cy="100" r="80"
+                                    stroke="#FFD700" stroke-dasharray="502" stroke-dashoffset="502"/>
+                                <circle class="circle-progress" id="stepsGoalProgress" cx="100" cy="100" r="65"
+                                    stroke="#4FC3F7" stroke-dasharray="408" stroke-dashoffset="408"/>
+                                <circle class="circle-progress" id="stepsFactProgress" cx="100" cy="100" r="50"
+                                    stroke="#66BB6A" stroke-dasharray="314" stroke-dashoffset="314"/>
+                            </svg>
+                            <div class="circle-center">
+                                <div class="circle-count" id="stepsCount">0</div>
+                                <div class="circle-label">шагов</div>
+                            </div>
+                        </div>
+                        <div class="legend-compact">
+                            <div class="legend-item" onclick="editTile('stepsNorm')">
+                                <div class="legend-color" style="background: #FFD700;"></div>
+                                <div class="legend-label">Норма</div>
+                                <div class="legend-value" id="legendStepsNorm">10000</div>
+                            </div>
+                            <div class="legend-item" onclick="editTile('stepsGoal')">
+                                <div class="legend-color" style="background: #4FC3F7;"></div>
+                                <div class="legend-label">Цель</div>
+                                <div class="legend-value" id="legendStepsGoal">10000</div>
+                            </div>
+                            <div class="legend-item" onclick="editTile('stepsFact')">
+                                <div class="legend-color" style="background: #66BB6A;"></div>
+                                <div class="legend-label">Факт</div>
+                                <div class="legend-value" id="legendStepsFact">0</div>
+                            </div>
+                        </div>
+                        <div class="distance-tile">
+                            <div style="font-size: 0.7em; color: rgba(255,255,255,0.8); margin-bottom: 3px;">📍 Расстояние</div>
+                            <div class="distance-value" id="tileDistanceValue">0</div>
+                            <div class="distance-unit">км</div>
+                            <div class="distance-sub" id="tileDistanceSteps">0 шагов</div>
+                        </div>
+                    </div>
+
+                    <div class="calories-column">
+                        <div class="circle-section-title">🔥 Сожжено</div>
+                        <div class="steps-circle-container">
+                            <svg class="steps-circle" viewBox="0 0 200 200">
+                                <circle class="circle-bg" cx="100" cy="100" r="80"/>
+                                <circle class="circle-bg" cx="100" cy="100" r="65"/>
+                                <circle class="circle-bg" cx="100" cy="100" r="50"/>
+                                <circle class="circle-progress" id="calNormProgress" cx="100" cy="100" r="80"
+                                    stroke="#FFD700" stroke-dasharray="502" stroke-dashoffset="502"/>
+                                <circle class="circle-progress" id="calGoalProgress" cx="100" cy="100" r="65"
+                                    stroke="#FF6B6B" stroke-dasharray="408" stroke-dashoffset="408"/>
+                                <circle class="circle-progress" id="calFactProgress" cx="100" cy="100" r="50"
+                                    stroke="#4ECDC4" stroke-dasharray="314" stroke-dashoffset="314"/>
+                            </svg>
+                            <div class="circle-center">
+                                <div class="circle-count" id="caloriesCount">0</div>
+                                <div class="circle-label">ккал</div>
+                            </div>
+                        </div>
+                        <div class="legend-compact">
+                            <div class="legend-item" onclick="editTile('calNorm')">
+                                <div class="legend-color" style="background: #FFD700;"></div>
+                                <div class="legend-label">Норма</div>
+                                <div class="legend-value" id="legendCalNorm">2000</div>
+                            </div>
+                            <div class="legend-item" onclick="editTile('calGoal')">
+                                <div class="legend-color" style="background: #FF6B6B;"></div>
+                                <div class="legend-label">Цель</div>
+                                <div class="legend-value" id="legendCalGoal">2500</div>
+                            </div>
+                            <div class="legend-item" onclick="editTile('calFact')">
+                                <div class="legend-color" style="background: #4ECDC4;"></div>
+                                <div class="legend-label">Сожжено</div>
+                                <div class="legend-value" id="legendCalFact">0</div>
+                            </div>
+                        </div>
+                        <div class="balance-tile">
+                            <div style="font-size: 0.7em; color: rgba(255,255,255,0.8); margin-bottom: 5px; text-align: center;">⚖️ Баланс</div>
+                            <div class="balance-comparison">
+                                <div class="balance-side">
+                                    <div class="balance-side-label">Съедено</div>
+                                    <div class="balance-side-value" id="balanceEaten">0</div>
+                                </div>
+                                <div class="balance-arrow">→</div>
+                                <div class="balance-side">
+                                    <div class="balance-side-label">Сожжено</div>
+                                    <div class="balance-side-value" id="balanceBurned">0</div>
+                                </div>
+                            </div>
+                            <div class="balance-bar-wrapper">
+                                <div class="balance-bar-eaten" id="balanceBarEaten" style="width: 0%"></div>
+                                <div class="balance-bar-burned" id="balanceBarBurned" style="width: 0%"></div>
+                            </div>
+                            <div class="balance-status" id="balanceStatus">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="workouts-toggle glass" id="workoutsToggle">
+                <div class="workouts-toggle-header" onclick="toggleWorkoutsBlock()">
+                    <div class="workouts-toggle-title">🏋️ Тренировки</div>
+                    <div class="workouts-toggle-count" id="workoutsCount">0</div>
+                </div>
+                <div class="workouts-toggle-content">
+                    <div class="workouts-list" id="workoutsList"></div>
+                    <button class="add-workout-btn-compact" onclick="toggleForm()">+ Добавить тренировку</button>
+                    <div class="form-container" id="workoutForm">
+                        <div class="form-group">
+                            <label>Название</label>
+                            <input type="text" id="workoutName" placeholder="День ног">
+                        </div>
+                        <div class="form-group">
+                            <label>Дата</label>
+                            <input type="date" id="workoutDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Сожжено ккал</label>
+                            <input type="number" id="workoutCalories" placeholder="300">
+                        </div>
+                        <label style="display: block; color: #333; font-weight: 600; margin-bottom: 6px; font-size: 0.85em;">Упражнения</label>
+                        <div class="exercise-list" id="exerciseList"></div>
+                        <button class="add-exercise-btn" onclick="addExercise()">+ Упражнение</button>
+                        <button class="save-btn" onclick="saveWorkout()">💾 Сохранить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="nutrition-tab" class="tab-content">
+            <div class="meal-section-title">🍽️ Питание</div>
+            
+            <div class="total-eaten-tile">
+                <div class="total-eaten-left">
+                    <div class="total-eaten-icon">🍽️</div>
+                    <div class="total-eaten-info">
+                        <div class="total-eaten-label">Всего съедено</div>
+                        <div class="total-eaten-value" id="totalEatenValue">0</div>
+                    </div>
+                </div>
+                <div class="total-eaten-right">
+                    <div class="total-eaten-meals" id="totalEatenMeals">0 приемов</div>
+                    <div class="total-eaten-bar">
+                        <div class="total-eaten-bar-fill" id="totalEatenBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meal-accordion">
+                <div class="meal-row" onclick="toggleMeal('breakfast')" id="rowBreakfast">
+                    <div class="meal-row-info">
+                        <div class="meal-row-icon">
+                            <svg viewBox="0 0 40 40"><ellipse cx="20" cy="32" rx="12" ry="4" fill="rgba(255,255,255,0.3)"/><path d="M 12 20 Q 12 30 20 30 Q 28 30 28 20 L 28 12 Q 28 10 26 10 L 14 10 Q 12 10 12 12 Z" fill="rgba(255,255,255,0.8)"/></svg>
+                        </div>
+                        <div class="meal-row-text">
+                            <div class="meal-row-title">Завтрак</div>
+                            <div class="meal-row-count" id="breakfastCount">0 блюд</div>
+                        </div>
+                    </div>
+                    <div class="meal-row-calories" id="breakfastCalories">0 ккал</div>
+                    <div class="meal-row-arrow">▼</div>
+                </div>
+                <div class="meal-content" id="contentBreakfast">
+                    <div class="meal-content-inner">
+                        <div class="meal-list" id="breakfastList"></div>
+                        <div class="add-meal-form-inline" id="formBreakfast"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meal-accordion">
+                <div class="meal-row" onclick="toggleMeal('lunch')" id="rowLunch">
+                    <div class="meal-row-info">
+                        <div class="meal-row-icon">
+                            <svg viewBox="0 0 40 40"><ellipse cx="20" cy="32" rx="14" ry="4" fill="rgba(255,255,255,0.3)"/><ellipse cx="20" cy="26" rx="10" ry="3.5" fill="rgba(255,255,255,0.9)"/></svg>
+                        </div>
+                        <div class="meal-row-text">
+                            <div class="meal-row-title">Обед</div>
+                            <div class="meal-row-count" id="lunchCount">0 блюд</div>
+                        </div>
+                    </div>
+                    <div class="meal-row-calories" id="lunchCalories">0 ккал</div>
+                    <div class="meal-row-arrow">▼</div>
+                </div>
+                <div class="meal-content" id="contentLunch">
+                    <div class="meal-content-inner">
+                        <div class="meal-list" id="lunchList"></div>
+                        <div class="add-meal-form-inline" id="formLunch"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meal-accordion">
+                <div class="meal-row" onclick="toggleMeal('snack')" id="rowSnack">
+                    <div class="meal-row-info">
+                        <div class="meal-row-icon">
+                            <svg viewBox="0 0 40 40"><ellipse cx="20" cy="32" rx="10" ry="3" fill="rgba(255,255,255,0.3)"/><path d="M 20 10 Q 14 12 12 18 Q 10 24 14 28 Q 17 31 20 31 Q 23 31 26 28 Q 30 24 28 18 Q 26 12 20 10 Z" fill="rgba(255,255,255,0.8)"/></svg>
+                        </div>
+                        <div class="meal-row-text">
+                            <div class="meal-row-title">Полдник</div>
+                            <div class="meal-row-count" id="snackCount">0 блюд</div>
+                        </div>
+                    </div>
+                    <div class="meal-row-calories" id="snackCalories">0 ккал</div>
+                    <div class="meal-row-arrow">▼</div>
+                </div>
+                <div class="meal-content" id="contentSnack">
+                    <div class="meal-content-inner">
+                        <div class="meal-list" id="snackList"></div>
+                        <div class="add-meal-form-inline" id="formSnack"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meal-accordion">
+                <div class="meal-row" onclick="toggleMeal('dinner')" id="rowDinner">
+                    <div class="meal-row-info">
+                        <div class="meal-row-icon">
+                            <svg viewBox="0 0 40 40"><ellipse cx="20" cy="34" rx="8" ry="2" fill="rgba(255,255,255,0.3)"/><path d="M 16 12 L 14 24 Q 14 28 20 28 Q 26 28 26 24 L 24 12 Z" fill="rgba(255,255,255,0.8)"/></svg>
+                        </div>
+                        <div class="meal-row-text">
+                            <div class="meal-row-title">Ужин</div>
+                            <div class="meal-row-count" id="dinnerCount">0 блюд</div>
+                        </div>
+                    </div>
+                    <div class="meal-row-calories" id="dinnerCalories">0 ккал</div>
+                    <div class="meal-row-arrow">▼</div>
+                </div>
+                <div class="meal-content" id="contentDinner">
+                    <div class="meal-content-inner">
+                        <div class="meal-list" id="dinnerList"></div>
+                        <div class="add-meal-form-inline" id="formDinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="health-tab" class="tab-content">
+            <div class="health-section">
+                <div class="health-section-title">❤️ Показатели</div>
+                <div class="health-grid">
+                    <div class="health-card" onclick="editHealth('pulse')">
+                        <div class="health-icon"></div>
+                        <div class="health-title">Пульс</div>
+                        <div class="health-value" id="healthPulse">—</div>
+                        <div class="health-unit">уд/мин</div>
+                    </div>
+                    <div class="health-card" onclick="editHealth('pressure')">
+                        <div class="health-icon"></div>
+                        <div class="health-title">Давление</div>
+                        <div class="health-value" id="healthPressure">—</div>
+                        <div class="health-unit">мм рт.ст.</div>
+                    </div>
+                    <div class="health-card" onclick="editHealth('weight')">
+                        <div class="health-icon">⚖️</div>
+                        <div class="health-title">Вес</div>
+                        <div class="health-value" id="healthWeight">—</div>
+                        <div class="health-unit">кг</div>
+                    </div>
+                    <div class="health-card" onclick="editHealth('water')">
+                        <div class="health-icon">💧</div>
+                        <div class="health-title">Вода</div>
+                        <div class="health-value" id="healthWater">0</div>
+                        <div class="health-unit">мл</div>
+                    </div>
+                    <div class="health-card" onclick="editHealth('sleep')">
+                        <div class="health-icon">😴</div>
+                        <div class="health-title">Сон</div>
+                        <div class="health-value" id="healthSleep">—</div>
+                        <div class="health-unit">часов</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="health-section">
+                <div class="health-section-title">📊 Тело</div>
+                <div class="health-metrics">
+                    <div class="health-metric">
+                        <div class="health-metric-icon"></div>
+                        <div class="health-metric-title">ИМТ</div>
+                        <div class="health-metric-value" id="healthBMI">—</div>
+                        <div class="health-metric-status" id="healthBMIStatus">—</div>
+                    </div>
+                    <div class="health-metric">
+                        <div class="health-metric-icon">🔥</div>
+                        <div class="health-metric-title">BMR</div>
+                        <div class="health-metric-value" id="healthBMR">—</div>
+                        <div class="health-metric-status" id="healthBMRStatus">ккал</div>
+                    </div>
+                    <div class="health-metric">
+                        <div class="health-metric-icon">⚡</div>
+                        <div class="health-metric-title">TDEE</div>
+                        <div class="health-metric-value" id="healthTDEE">—</div>
+                        <div class="health-metric-status" id="healthTDEEStatus">ккал</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="statistics-tab" class="tab-content">
+            <div class="stats-controls">
+                <button class="control-btn active" onclick="setStatsPeriod('week', this)">Неделя</button>
+                <button class="control-btn" onclick="setStatsPeriod('month', this)">Месяц</button>
+            </div>
+
+            <div class="chart-container-improved">
+                <div class="chart-title" id="chartTitle">👟 Шаги</div>
+                <div class="line-chart-container">
+                    <svg class="line-chart-svg" id="lineChartSvg" viewBox="0 0 800 250" preserveAspectRatio="none"></svg>
+                </div>
+                <div class="chart-legend" id="chartLegend"></div>
+            </div>
+
+            <div class="stats-tabs">
+                <div class="stats-tab active" onclick="setChartType('steps', this)">
+                    <div class="stats-tab-icon">👟</div>
+                    <div class="stats-tab-label">Шаги</div>
+                </div>
+                <div class="stats-tab" onclick="setChartType('distance', this)">
+                    <div class="stats-tab-icon">📍</div>
+                    <div class="stats-tab-label">Расстояние</div>
+                </div>
+                <div class="stats-tab" onclick="setChartType('burned', this)">
+                    <div class="stats-tab-icon">🔥</div>
+                    <div class="stats-tab-label">Сожжено</div>
+                </div>
+                <div class="stats-tab" onclick="setChartType('pulse', this)">
+                    <div class="stats-tab-icon">💓</div>
+                    <div class="stats-tab-label">Пульс</div>
+                </div>
+                <div class="stats-tab" onclick="setChartType('pressure', this)">
+                    <div class="stats-tab-icon">🩸</div>
+                    <div class="stats-tab-label">Давление</div>
+                </div>
+                <div class="stats-tab" onclick="setChartType('weight', this)">
+                    <div class="stats-tab-icon">⚖️</div>
+                    <div class="stats-tab-label">Вес</div>
+                </div>
+                <div class="stats-tab" onclick="setChartType('water', this)">
+                    <div class="stats-tab-icon">💧</div>
+                    <div class="stats-tab-label">Вода</div>
+                </div>
+                <div class="stats-tab" onclick="setChartType('sleep', this)">
+                    <div class="stats-tab-icon">😴</div>
+                    <div class="stats-tab-label">Сон</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const foodDatabase = [
+            { name: 'Борщ', calories: 49 },
+            { name: 'Щи', calories: 42 },
+            { name: 'Пельмени', calories: 275 },
+            { name: 'Котлеты', calories: 185 },
+            { name: 'Гречка', calories: 132 },
+            { name: 'Рис', calories: 130 },
+            { name: 'Макароны', calories: 158 },
+            { name: 'Куриная грудка', calories: 137 },
+            { name: 'Яйцо', calories: 157 },
+            { name: 'Творог', calories: 121 },
+            { name: 'Огурец', calories: 15 },
+            { name: 'Помидор', calories: 20 },
+            { name: 'Яблоко', calories: 52 },
+            { name: 'Банан', calories: 89 },
+            { name: 'Хлеб', calories: 265 },
+            { name: 'Кофе', calories: 2 },
+            { name: 'Чай', calories: 1 },
+        ];
+
+        const bodyTypes = [
+            { id: 'terminator', label: 'Терминатор', desc: 'Спортивный, накачанный', img: 'images/terminator.jpg' },
+            { id: 'cucumber', label: 'Огурец', desc: 'Худой и высокий', img: 'images/cucumber.jpg' },
+            { id: 'watermelon', label: 'Арбуз', desc: 'Большой круглый живот', img: 'images/watermelon.jpg' },
+            { id: 'zucchini', label: 'Кабачок', desc: 'Узкие плечи, пухлый', img: 'images/zucchini.jpg' },
+            { id: 'elf', label: 'Эльф', desc: 'Маленький, худощавый', img: 'images/elf.jpg' }
+        ];
+
+        let workouts = JSON.parse(localStorage.getItem('workouts')) || [];
+        let profile = JSON.parse(localStorage.getItem('profile')) || {};
+        let stepsData = JSON.parse(localStorage.getItem('stepsData')) || {};
+        let caloriesData = JSON.parse(localStorage.getItem('caloriesData')) || {};
+        let mealsData = JSON.parse(localStorage.getItem('mealsData')) || {};
+        let burnedData = JSON.parse(localStorage.getItem('burnedData')) || {};
+        let healthData = JSON.parse(localStorage.getItem('healthData')) || {};
+        let customFoods = JSON.parse(localStorage.getItem('customFoods')) || [];
+        let exerciseCount = 0;
+        let currentMealType = 'breakfast';
+        let currentStatsPeriod = 'week';
+        let currentChartType = 'steps';
+        let manualMode = false;
+        let selectedFood = null;
+        let editingTile = null;
+        let editingHealth = null;
+        let currentBodyIndex = 0;
+
+        function getTodayKey() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
+        function getLocalDateKey(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function formatTodayDate() {
+            return new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'long' });
+        }
+
+        function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function getFoodDatabase() {
+            return [...foodDatabase, ...customFoods];
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                document.querySelectorAll('.search-dropdown').forEach(d => d.classList.remove('active'));
+            }
+            if (!e.target.closest('.meal-accordion') && !e.target.closest('.total-eaten-tile')) {
+                closeAllMealAccordions();
+            }
+            if (!e.target.closest('.health-card')) {
+                closeEditHealth();
+            }
+        });
+
+        function openProfile() {
+            document.getElementById('settingsOverlay').classList.add('active');
+            document.getElementById('profilePanel').classList.add('active');
+            loadProfileForm();
+        }
+
+        function closeProfile() {
+            document.getElementById('settingsOverlay').classList.remove('active');
+            document.getElementById('profilePanel').classList.remove('active');
+        }
+
+        function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profile.avatar = e.target.result;
+                    localStorage.setItem('profile', JSON.stringify(profile));
+                    updateProfileDisplay();
+                    showToast('✅ Фото загружено!');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadProfileForm() {
+            document.getElementById('profileNameInput').value = profile.name || '';
+            document.getElementById('profileAge').value = profile.age || '';
+            document.getElementById('profileHeight').value = profile.height || '';
+            document.getElementById('profileWeight').value = profile.weight || '';
+            updateProfileDisplay();
+            updateCarousel();
+        }
+
+        function updateProfileDisplay() {
+            const name = profile.name || 'Гость';
+            const avatarEl = document.getElementById('headerAvatar');
+            const profileAvatarEl = document.getElementById('profileAvatar');
+            
+            if (profile.avatar) {
+                avatarEl.innerHTML = `<img src="${profile.avatar}" alt="avatar">`;
+                profileAvatarEl.innerHTML = `<img src="${profile.avatar}" alt="avatar">`;
+            } else {
+                avatarEl.textContent = '👤';
+                profileAvatarEl.innerHTML = '<span>👤</span>';
+            }
+            
+            document.getElementById('headerUserName').textContent = name;
+            document.getElementById('profileName').textContent = name;
+        }
+
+        function updateCarousel() {
+            const currentType = profile.bodyType || 'terminator';
+            const index = bodyTypes.findIndex(b => b.id === currentType);
+            currentBodyIndex = index >= 0 ? index : 0;
+            
+            const current = bodyTypes[currentBodyIndex];
+            document.getElementById('carouselImage').src = current.img;
+            document.getElementById('carouselLabel').textContent = current.label;
+            document.getElementById('carouselDesc').textContent = current.desc;
+            
+            const dotsContainer = document.getElementById('carouselDots');
+            dotsContainer.innerHTML = bodyTypes.map((_, i) => 
+                `<div class="carousel-dot ${i === currentBodyIndex ? 'active' : ''}"></div>`
+            ).join('');
+        }
+
+        function changeBodyType(direction) {
+            currentBodyIndex = (currentBodyIndex + direction + bodyTypes.length) % bodyTypes.length;
+            const newType = bodyTypes[currentBodyIndex];
+            
+            profile.bodyType = newType.id;
+            localStorage.setItem('profile', JSON.stringify(profile));
+            
+            updateCarousel();
+            showToast(`✅ ${newType.label}`);
+        }
+
+        function saveProfileField(field) {
+            const input = document.getElementById(`profile${capitalize(field)}`);
+            const value = field === 'name' ? input.value.trim() : parseFloat(input.value);
+            
+            if (field === 'name' && !value) return;
+            if (field !== 'name' && (!value || value <= 0)) return;
+            
+            profile[field] = value;
+            localStorage.setItem('profile', JSON.stringify(profile));
+            
+            if (field === 'name') {
+                document.getElementById('headerUserName').textContent = value;
+                document.getElementById('profileName').textContent = value;
+            }
+            
+            updateAllDisplays();
+            updateHealthMetrics();
+            showToast('✅ Сохранено!');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabName === 'statistics') updateChart();
+            if (tabName === 'health') updateHealthMetrics();
+        }
+
+        function getTodaySteps() { return stepsData[getTodayKey()] || 0; }
+        function getTodayCalories() { return caloriesData[getTodayKey()] || 0; }
+        function getTodayBurned() { return burnedData[getTodayKey()] || 0; }
+        function getStepsGoal() { return profile.stepsGoal || 10000; }
+        function getStepsNorm() { return profile.stepsNorm || 10000; }
+        function getCalNorm() { return profile.calNorm || 2000; }
+        function getCalGoal() { return profile.calGoal || 2500; }
+
+        function calculateBMR() {
+            if (!profile.weight || !profile.height || !profile.age) return 0;
+            if (profile.gender === 'male') {
+                return Math.round(10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5);
+            } else {
+                return Math.round(10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161);
+            }
+        }
+
+        function calculateTDEE() {
+            const bmr = calculateBMR();
+            return Math.round(bmr * 1.55);
+        }
+
+        function calculateBMI() {
+            if (!profile.weight || !profile.height) return 0;
+            const heightInMeters = profile.height / 100;
+            return (profile.weight / (heightInMeters * heightInMeters)).toFixed(1);
+        }
+
+        function getBMIStatus(bmi) {
+            if (bmi < 18.5) return { text: 'Недостаточный', color: '#FFD700' };
+            if (bmi < 25) return { text: 'Норма', color: '#4ECDC4' };
+            if (bmi < 30) return { text: 'Избыточный', color: '#FFA726' };
+            return { text: 'Ожирение', color: '#FF6B6B' };
+        }
+
+        function calculateBurnedFromSteps(steps) {
+            return Math.round(steps * (profile.weight || 70) * 0.0005);
+        }
+
+        function calculateBurnedFromWorkouts() {
+            const today = getTodayKey();
+            return workouts.filter(w => w.date === today).reduce((sum, w) => sum + (w.calories || 0), 0);
+        }
+
+        function calculateTotalBurned() {
+            return calculateBMR() + calculateBurnedFromSteps(getTodaySteps()) + calculateBurnedFromWorkouts();
+        }
+
+        function calculateDistance(steps) {
+            return (steps * 0.00075).toFixed(2);
+        }
+
+        function getTotalMealsCount() {
+            const meals = mealsData[getTodayKey()] || [];
+            return meals.length;
+        }
+
+        function editTile(type) {
+            if (editingTile) closeEditTile();
+
+            editingTile = type;
+            const item = document.querySelector(`.legend-item[onclick="editTile('${type}')"]`);
+            const valueEl = document.getElementById(`legend${capitalize(type)}`);
+            
+            let currentValue;
+            if (type === 'stepsFact') currentValue = getTodaySteps();
+            else if (type === 'stepsNorm') currentValue = getStepsNorm();
+            else if (type === 'stepsGoal') currentValue = getStepsGoal();
+            else if (type === 'calFact') currentValue = getTodayBurned();
+            else if (type === 'calNorm') currentValue = getCalNorm();
+            else if (type === 'calGoal') currentValue = getCalGoal();
+
+            item.classList.add('editing');
+            valueEl.style.display = 'none';
+
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'legend-input';
+            input.value = currentValue;
+            input.id = `tileInput${capitalize(type)}`;
+            input.min = '0';
+
+            item.appendChild(input);
+            input.focus();
+            input.select();
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); saveTileEdit(type); }
+                if (e.key === 'Escape') { e.preventDefault(); closeEditTile(); }
+            });
+
+            input.addEventListener('blur', function() {
+                setTimeout(() => { if (editingTile === type) saveTileEdit(type); }, 200);
+            });
+        }
+
+        function saveTileEdit(type) {
+            const input = document.getElementById(`tileInput${capitalize(type)}`);
+            if (!input) return;
+
+            const value = parseInt(input.value);
+            input.remove();
+
+            const item = document.querySelector(`.legend-item[onclick="editTile('${type}')"]`);
+            item.classList.remove('editing');
+
+            const valueEl = document.getElementById(`legend${capitalize(type)}`);
+            valueEl.style.display = 'block';
+
+            if (value >= 0) {
+                if (type === 'stepsNorm') {
+                    profile.stepsNorm = value;
+                    localStorage.setItem('profile', JSON.stringify(profile));
+                } else if (type === 'stepsGoal') {
+                    profile.stepsGoal = value;
+                    localStorage.setItem('profile', JSON.stringify(profile));
+                } else if (type === 'stepsFact') {
+                    stepsData[getTodayKey()] = value;
+                    localStorage.setItem('stepsData', JSON.stringify(stepsData));
+                } else if (type === 'calNorm') {
+                    profile.calNorm = value;
+                    localStorage.setItem('profile', JSON.stringify(profile));
+                } else if (type === 'calGoal') {
+                    profile.calGoal = value;
+                    localStorage.setItem('profile', JSON.stringify(profile));
+                }
+                showToast(`✅ ${capitalize(type)}: ${value.toLocaleString('ru-RU')}`);
+            }
+
+            editingTile = null;
+            updateAllDisplays();
+        }
+
+        function closeEditTile() {
+            if (!editingTile) return;
+            const input = document.getElementById(`tileInput${capitalize(editingTile)}`);
+            if (input) input.remove();
+
+            const item = document.querySelector(`.legend-item[onclick="editTile('${editingTile}')"]`);
+            if (item) item.classList.remove('editing');
+
+            const valueEl = document.getElementById(`legend${capitalize(editingTile)}`);
+            if (valueEl) valueEl.style.display = 'block';
+
+            editingTile = null;
+        }
+
+        function editHealth(type) {
+            if (editingHealth) closeEditHealth();
+
+            editingHealth = type;
+            const item = document.querySelector(`.health-card[onclick="editHealth('${type}')"]`);
+            const valueEl = document.getElementById(`health${capitalize(type)}`);
+            
+            let currentValue;
+            const today = getTodayKey();
+            const todayHealth = healthData[today] || {};
+            
+            if (type === 'pulse') currentValue = todayHealth.pulse || '';
+            else if (type === 'pressure') currentValue = todayHealth.pressure || '';
+            else if (type === 'weight') currentValue = todayHealth.weight || profile.weight || '';
+            else if (type === 'water') currentValue = todayHealth.water || 0;
+            else if (type === 'sleep') currentValue = todayHealth.sleep || '';
+
+            item.classList.add('editing');
+            valueEl.style.display = 'none';
+
+            const input = document.createElement('input');
+            input.type = type === 'pressure' ? 'text' : 'number';
+            input.className = 'health-input';
+            input.value = currentValue;
+            input.id = `healthInput${capitalize(type)}`;
+            if (type === 'pulse' || type === 'weight' || type === 'water') input.min = '0';
+            if (type === 'sleep') { input.min = '0'; input.max = '24'; input.step = '0.5'; }
+
+            item.appendChild(input);
+            input.focus();
+            input.select();
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); saveHealthEdit(type); }
+                if (e.key === 'Escape') { e.preventDefault(); closeEditHealth(); }
+            });
+
+            input.addEventListener('blur', function() {
+                setTimeout(() => { if (editingHealth === type) saveHealthEdit(type); }, 200);
+            });
+        }
+
+        function saveHealthEdit(type) {
+            const input = document.getElementById(`healthInput${capitalize(type)}`);
+            if (!input) return;
+
+            const value = input.value.trim();
+            input.remove();
+
+            const item = document.querySelector(`.health-card[onclick="editHealth('${type}')"]`);
+            item.classList.remove('editing');
+
+            const valueEl = document.getElementById(`health${capitalize(type)}`);
+            valueEl.style.display = 'block';
+
+            const today = getTodayKey();
+            if (!healthData[today]) healthData[today] = {};
+
+            if (value !== '') {
+                if (type === 'pulse') {
+                    healthData[today].pulse = parseInt(value);
+                } else if (type === 'pressure') {
+                    if (value.includes('/')) {
+                        healthData[today].pressure = value;
+                    } else {
+                        showToast('⚠️ Формат: 120/80');
+                        editingHealth = null;
+                        updateHealthMetrics();
+                        return;
+                    }
+                } else if (type === 'weight') {
+                    healthData[today].weight = parseFloat(value);
+                    profile.weight = parseFloat(value);
+                    localStorage.setItem('profile', JSON.stringify(profile));
+                } else if (type === 'water') {
+                    healthData[today].water = parseInt(value);
+                } else if (type === 'sleep') {
+                    healthData[today].sleep = parseFloat(value);
+                }
+                localStorage.setItem('healthData', JSON.stringify(healthData));
+                showToast('✅ Сохранено!');
+            }
+
+            editingHealth = null;
+            updateHealthMetrics();
+        }
+
+        function closeEditHealth() {
+            if (!editingHealth) return;
+            const input = document.getElementById(`healthInput${capitalize(editingHealth)}`);
+            if (input) input.remove();
+
+            const item = document.querySelector(`.health-card[onclick="editHealth('${editingHealth}')"]`);
+            if (item) item.classList.remove('editing');
+
+            const valueEl = document.getElementById(`health${capitalize(editingHealth)}`);
+            if (valueEl) valueEl.style.display = 'block';
+
+            editingHealth = null;
+        }
+
+        function updateAllDisplays() {
+            const steps = getTodaySteps();
+            const stepsGoal = getStepsGoal();
+            const stepsNorm = getStepsNorm();
+            const distance = calculateDistance(steps);
+            const totalBurned = calculateTotalBurned();
+            const eaten = getTodayCalories();
+            const calNorm = getCalNorm();
+            const calGoal = getCalGoal();
+            const mealsCount = getTotalMealsCount();
+
+            burnedData[getTodayKey()] = totalBurned;
+            localStorage.setItem('burnedData', JSON.stringify(burnedData));
+
+            const normProgress = Math.min(steps / stepsNorm, 1);
+            const normOffset = 502 - (normProgress * 502);
+            document.getElementById('stepsNormProgress').style.strokeDashoffset = normOffset;
+
+            const goalProgress = Math.min(steps / stepsGoal, 1);
+            const goalOffset = 408 - (goalProgress * 408);
+            document.getElementById('stepsGoalProgress').style.strokeDashoffset = goalOffset;
+
+            const factProgress = Math.min(steps / Math.max(stepsNorm, stepsGoal), 1);
+            const factOffset = 314 - (factProgress * 314);
+            document.getElementById('stepsFactProgress').style.strokeDashoffset = factOffset;
+
+            document.getElementById('stepsCount').textContent = steps.toLocaleString('ru-RU');
+            document.getElementById('legendStepsNorm').textContent = stepsNorm.toLocaleString('ru-RU');
+            document.getElementById('legendStepsGoal').textContent = stepsGoal.toLocaleString('ru-RU');
+            document.getElementById('legendStepsFact').textContent = steps.toLocaleString('ru-RU');
+
+            document.getElementById('tileDistanceValue').textContent = distance;
+            document.getElementById('tileDistanceSteps').textContent = `${steps.toLocaleString('ru-RU')} шагов`;
+
+            const calNormProgress = Math.min(totalBurned / calNorm, 1);
+            const calNormOffset = 502 - (calNormProgress * 502);
+            document.getElementById('calNormProgress').style.strokeDashoffset = calNormOffset;
+
+            const calGoalProgress = Math.min(totalBurned / calGoal, 1);
+            const calGoalOffset = 408 - (calGoalProgress * 408);
+            document.getElementById('calGoalProgress').style.strokeDashoffset = calGoalOffset;
+
+            const calFactProgress = Math.min(totalBurned / Math.max(calNorm, calGoal), 1);
+            const calFactOffset = 314 - (calFactProgress * 314);
+            document.getElementById('calFactProgress').style.strokeDashoffset = calFactOffset;
+
+            document.getElementById('caloriesCount').textContent = totalBurned.toLocaleString('ru-RU');
+            document.getElementById('legendCalNorm').textContent = calNorm.toLocaleString('ru-RU');
+            document.getElementById('legendCalGoal').textContent = calGoal.toLocaleString('ru-RU');
+            document.getElementById('legendCalFact').textContent = totalBurned.toLocaleString('ru-RU');
+
+            document.getElementById('balanceEaten').textContent = eaten;
+            document.getElementById('balanceBurned').textContent = totalBurned;
+            const max = Math.max(eaten, totalBurned, 1);
+            document.getElementById('balanceBarEaten').style.width = `${(eaten / max) * 100}%`;
+            document.getElementById('balanceBarBurned').style.width = `${(totalBurned / max) * 100}%`;
+            
+            const diff = totalBurned - eaten;
+            const status = document.getElementById('balanceStatus');
+            if (diff > 0) {
+                status.textContent = `🎯 Дефицит +${diff} ккал`;
+                status.style.background = 'rgba(76, 175, 80, 0.3)';
+            } else if (diff < 0) {
+                status.textContent = `️ Профицит ${Math.abs(diff)} ккал`;
+                status.style.background = 'rgba(244, 67, 54, 0.3)';
+            } else {
+                status.textContent = '⚖️ Баланс';
+                status.style.background = 'rgba(255, 193, 7, 0.3)';
+            }
+
+            document.getElementById('totalEatenValue').textContent = eaten.toLocaleString('ru-RU');
+            document.getElementById('totalEatenMeals').textContent = `${mealsCount} ${mealsCount === 1 ? 'прием' : mealsCount < 5 ? 'приема' : 'приемов'}`;
+            const goalForBar = calGoal || 2000;
+            const barPercent = Math.min((eaten / goalForBar) * 100, 100);
+            document.getElementById('totalEatenBar').style.width = `${barPercent}%`;
+
+            renderMeals();
+        }
+
+        function updateHealthMetrics() {
+            const today = getTodayKey();
+            const todayHealth = healthData[today] || {};
+
+            document.getElementById('healthPulse').textContent = todayHealth.pulse || '—';
+            document.getElementById('healthPressure').textContent = todayHealth.pressure || '—';
+            document.getElementById('healthWeight').textContent = todayHealth.weight || profile.weight || '—';
+            document.getElementById('healthWater').textContent = todayHealth.water || 0;
+            document.getElementById('healthSleep').textContent = todayHealth.sleep || '—';
+
+            const bmi = calculateBMI();
+            const bmr = calculateBMR();
+            const tdee = calculateTDEE();
+
+            document.getElementById('healthBMI').textContent = bmi || '—';
+            document.getElementById('healthBMR').textContent = bmr || '—';
+            document.getElementById('healthTDEE').textContent = tdee || '—';
+
+            if (bmi) {
+                const bmiStatus = getBMIStatus(parseFloat(bmi));
+                const bmiStatusEl = document.getElementById('healthBMIStatus');
+                bmiStatusEl.textContent = bmiStatus.text;
+                bmiStatusEl.style.background = bmiStatus.color;
+            }
+        }
+
+        function toggleMeal(type) {
+            const row = document.getElementById(`row${capitalize(type)}`);
+            const content = document.getElementById(`content${capitalize(type)}`);
+            
+            const isActive = row.classList.contains('active');
+            closeAllMealAccordions();
+            
+            if (!isActive) {
+                row.classList.add('active');
+                content.classList.add('active');
+                currentMealType = type;
+                initMealForm(type);
+            }
+        }
+
+        function closeAllMealAccordions() {
+            document.querySelectorAll('.meal-row').forEach(r => r.classList.remove('active'));
+            document.querySelectorAll('.meal-content').forEach(c => c.classList.remove('active'));
+        }
+
+        function initMealForm(type) {
+            const form = document.getElementById(`form${capitalize(type)}`);
+            if (form.innerHTML.trim() === '') {
+                form.innerHTML = `
+                    <div class="search-container">
+                        <input type="text" class="search-input" id="mealSearch-${type}" placeholder="🔍 Поиск блюда..." autocomplete="off">
+                        <div class="search-dropdown" id="searchDropdown-${type}"></div>
+                    </div>
+                    <div class="meal-form-row">
+                        <input type="text" id="mealName-${type}" placeholder="Название">
+                        <input type="number" id="mealWeight-${type}" placeholder="Вес (г)" value="200">
+                    </div>
+                    <div class="meal-form-row">
+                        <input type="number" id="mealCalPer100-${type}" placeholder="Ккал/100г">
+                        <input type="number" id="mealTotalCal-${type}" placeholder="Итого" readonly style="background: #e3f2fd; font-weight: 700;">
+                    </div>
+                    <div class="calories-preview" id="caloriesPreview-${type}" style="display: none;">
+                        <span id="previewCalc-${type}"></span>
+                    </div>
+                    <button class="add-meal-btn" id="addMealBtn-${type}" onclick="addMeal('${type}')" disabled>➕ Добавить</button>
+                    <div class="manual-toggle" onclick="toggleManualMode('${type}')">✏️ Ввести вручную</div>
+                `;
+                setupMealFormEvents(type);
+            }
+        }
+
+        function setupMealFormEvents(type) {
+            const searchInput = document.getElementById(`mealSearch-${type}`);
+            const searchDropdown = document.getElementById(`searchDropdown-${type}`);
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim().toLowerCase();
+                if (query.length < 2) { searchDropdown.classList.remove('active'); return; }
+                
+                const allFoods = getFoodDatabase();
+                const results = allFoods.filter(f => f.name.toLowerCase().includes(query)).slice(0, 5);
+                if (results.length === 0) { searchDropdown.classList.remove('active'); return; }
+                
+                searchDropdown.innerHTML = results.map(f => `
+                    <div class="search-item" onclick="selectFood('${type}', '${f.name}', ${f.calories})">
+                        <span class="search-item-name">${f.name}</span>
+                        <span class="search-item-cal">${f.calories} ккал/100г</span>
+                    </div>
+                `).join('');
+                searchDropdown.classList.add('active');
+            });
+
+            const weightInput = document.getElementById(`mealWeight-${type}`);
+            const calInput = document.getElementById(`mealCalPer100-${type}`);
+            
+            weightInput.addEventListener('input', () => updateCaloriesPreview(type));
+            calInput.addEventListener('input', () => { selectedFood = null; updateCaloriesPreview(type); });
+        }
+
+        function selectFood(type, name, calories) {
+            selectedFood = { name, calories };
+            document.getElementById(`mealSearch-${type}`).value = name;
+            document.getElementById(`mealName-${type}`).value = name;
+            document.getElementById(`mealCalPer100-${type}`).value = calories;
+            setTimeout(() => {
+                document.querySelectorAll('.search-dropdown').forEach(d => d.classList.remove('active'));
+            }, 100);
+            updateCaloriesPreview(type);
+        }
+
+        function updateCaloriesPreview(type) {
+            const weight = parseInt(document.getElementById(`mealWeight-${type}`).value) || 0;
+            const calPer100 = parseInt(document.getElementById(`mealCalPer100-${type}`).value) || 0;
+            const total = Math.round((calPer100 * weight) / 100);
+            
+            document.getElementById(`mealTotalCal-${type}`).value = total > 0 ? total : '';
+            document.getElementById(`addMealBtn-${type}`).disabled = !(total > 0);
+            
+            if (calPer100 > 0 && weight > 0) {
+                document.getElementById(`previewCalc-${type}`).textContent = `${calPer100} × ${weight}г / 100 = ${total} ккал`;
+                document.getElementById(`caloriesPreview-${type}`).style.display = 'block';
+            } else {
+                document.getElementById(`caloriesPreview-${type}`).style.display = 'none';
+            }
+        }
+
+        function toggleManualMode(type) {
+            manualMode = !manualMode;
+            const searchInput = document.getElementById(`mealSearch-${type}`);
+            const nameInput = document.getElementById(`mealName-${type}`);
+            
+            if (manualMode) {
+                searchInput.style.display = 'none';
+                nameInput.style.display = 'block';
+                nameInput.focus();
+            } else {
+                searchInput.style.display = 'block';
+                nameInput.style.display = 'none';
+            }
+        }
+
+        function addMeal(type) {
+            const name = document.getElementById(`mealName-${type}`).value.trim();
+            const weight = parseInt(document.getElementById(`mealWeight-${type}`).value) || 200;
+            const calPer100 = parseInt(document.getElementById(`mealCalPer100-${type}`).value) || 0;
+            const totalCal = Math.round((calPer100 * weight) / 100);
+            
+            if (!name || totalCal <= 0) {
+                showToast('⚠️ Заполни данные');
+                return;
+            }
+            
+            const allFoods = getFoodDatabase();
+            const existingFood = allFoods.find(f => f.name.toLowerCase() === name.toLowerCase());
+            if (!existingFood) {
+                customFoods.push({ name, calories: calPer100 });
+                localStorage.setItem('customFoods', JSON.stringify(customFoods));
+            }
+            
+            const today = getTodayKey();
+            const meals = mealsData[today] || [];
+            const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            
+            meals.push({
+                id: Date.now(),
+                name, weight, calPer100,
+                calories: totalCal,
+                time,
+                mealType: type
+            });
+            
+            mealsData[today] = meals;
+            caloriesData[today] = (caloriesData[today] || 0) + totalCal;
+            
+            localStorage.setItem('mealsData', JSON.stringify(mealsData));
+            localStorage.setItem('caloriesData', JSON.stringify(caloriesData));
+            
+            document.getElementById(`mealSearch-${type}`).value = '';
+            document.getElementById(`mealName-${type}`).value = '';
+            document.getElementById(`mealWeight-${type}`).value = '200';
+            document.getElementById(`mealCalPer100-${type}`).value = '';
+            document.getElementById(`mealTotalCal-${type}`).value = '';
+            document.getElementById(`caloriesPreview-${type}`).style.display = 'none';
+            document.getElementById(`addMealBtn-${type}`).disabled = true;
+            selectedFood = null;
+            
+            closeAllMealAccordions();
+            
+            updateAllDisplays();
+            showToast(`✅ ${name} добавлен!`);
+        }
+
+        function deleteMeal(id) {
+            const today = getTodayKey();
+            const meals = mealsData[today] || [];
+            const meal = meals.find(m => m.id === id);
+            
+            if (meal) {
+                caloriesData[today] = Math.max(0, (caloriesData[today] || 0) - meal.calories);
+                mealsData[today] = meals.filter(m => m.id !== id);
+                
+                localStorage.setItem('caloriesData', JSON.stringify(caloriesData));
+                localStorage.setItem('mealsData', JSON.stringify(mealsData));
+                
+                updateAllDisplays();
+                showToast('🗑️ Удалено');
+            }
+        }
+
+        function renderMeals() {
+            const meals = mealsData[getTodayKey()] || [];
+            const grouped = { breakfast: [], lunch: [], snack: [], dinner: [] };
+            
+            meals.forEach(meal => {
+                const type = meal.mealType || 'breakfast';
+                if (grouped[type]) grouped[type].push(meal);
+            });
+            
+            ['breakfast', 'lunch', 'snack', 'dinner'].forEach(type => {
+                const list = document.getElementById(`${type}List`);
+                const mealList = grouped[type];
+                const count = mealList.length;
+                const total = mealList.reduce((sum, m) => sum + m.calories, 0);
+                
+                if (mealList.length === 0) {
+                    list.innerHTML = '<div class="empty-meal-content">Пока пусто</div>';
+                } else {
+                    list.innerHTML = mealList.map(meal => `
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">${meal.name}</div>
+                                <div class="meal-details">🕐 ${meal.time} · ⚖️ ${meal.weight}г</div>
+                            </div>
+                            <div class="meal-calories">${meal.calories} ккал</div>
+                            <button class="meal-delete" onclick="deleteMeal(${meal.id})">✕</button>
+                        </div>
+                    `).join('');
+                }
+                
+                document.getElementById(`${type}Count`).textContent = `${count} блюд`;
+                document.getElementById(`${type}Calories`).textContent = `${total} ккал`;
+            });
+        }
+
+        function toggleWorkoutsBlock() {
+            document.getElementById('workoutsToggle').classList.toggle('expanded');
+        }
+
+        function toggleForm() {
+            const form = document.getElementById('workoutForm');
+            form.classList.toggle('active');
+            if (form.classList.contains('active') && exerciseCount === 0) addExercise();
+        }
+
+        function addExercise() {
+            exerciseCount++;
+            const div = document.createElement('div');
+            div.className = 'exercise-item';
+            div.id = `exercise-${exerciseCount}`;
+            div.innerHTML = `
+                <input type="text" placeholder="Название упражнения" class="ex-name">
+                <input type="number" placeholder="Подходы" class="ex-sets">
+                <input type="number" placeholder="Повторы" class="ex-reps">
+                <input type="number" placeholder="Вес" class="ex-weight">
+                <button class="remove-exercise" onclick="removeExercise(${exerciseCount})">✕</button>
+            `;
+            document.getElementById('exerciseList').appendChild(div);
+        }
+
+        function removeExercise(id) {
+            document.getElementById(`exercise-${id}`).remove();
+        }
+
+        function saveWorkout() {
+            const name = document.getElementById('workoutName').value.trim();
+            const date = document.getElementById('workoutDate').value;
+            const calories = parseInt(document.getElementById('workoutCalories').value) || 0;
+            
+            if (!name || !date) {
+                alert('Заполни название и дату');
+                return;
+            }
+            
+            const exercises = [];
+            document.querySelectorAll('.exercise-item').forEach(item => {
+                const exName = item.querySelector('.ex-name').value.trim();
+                if (exName) {
+                    exercises.push({
+                        name: exName,
+                        sets: item.querySelector('.ex-sets').value || '-',
+                        reps: item.querySelector('.ex-reps').value || '-',
+                        weight: item.querySelector('.ex-weight').value || '-'
+                    });
+                }
+            });
+            
+            if (exercises.length === 0) {
+                alert('Добавь упражнение');
+                return;
+            }
+            
+            workouts.unshift({ id: Date.now(), name, date, exercises, calories });
+            localStorage.setItem('workouts', JSON.stringify(workouts));
+            
+            document.getElementById('workoutName').value = '';
+            document.getElementById('workoutDate').value = '';
+            document.getElementById('workoutCalories').value = '';
+            document.getElementById('exerciseList').innerHTML = '';
+            exerciseCount = 0;
+            document.getElementById('workoutForm').classList.remove('active');
+            
+            renderWorkouts();
+            updateAllDisplays();
+            showToast('✅ Тренировка сохранена!');
+        }
+
+        function deleteWorkout(id) {
+            if (confirm('Удалить?')) {
+                workouts = workouts.filter(w => w.id !== id);
+                localStorage.setItem('workouts', JSON.stringify(workouts));
+                renderWorkouts();
+                updateAllDisplays();
+            }
+        }
+
+        function renderWorkouts() {
+            const list = document.getElementById('workoutsList');
+            const today = getTodayKey();
+            const todayWorkouts = workouts.filter(w => w.date === today);
+            document.getElementById('workoutsCount').textContent = todayWorkouts.length;
+            
+            if (todayWorkouts.length === 0) {
+                list.innerHTML = '<div class="empty-meal-content">Сегодня нет тренировок</div>';
+                return;
+            }
+            
+            list.innerHTML = todayWorkouts.map(w => `
+                <div class="workout-item">
+                    <div>
+                        <div class="workout-item-name">${w.name}</div>
+                        <div class="workout-item-date">${w.date}</div>
+                    </div>
+                    ${w.calories ? `<div style="color: #4FC3F7; font-weight: 700;">🔥 ${w.calories} ккал</div>` : ''}
+                    <button class="meal-delete" onclick="deleteWorkout(${w.id})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function setStatsPeriod(period, btn) {
+            currentStatsPeriod = period;
+            document.querySelectorAll('.stats-controls .control-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            updateChart();
+        }
+
+        function setChartType(type, btn) {
+            currentChartType = type;
+            document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            updateChart();
+        }
+
+        function getDatesForPeriod() {
+            const dates = [];
+            const today = new Date();
+            const days = currentStatsPeriod === 'week' ? 7 : 30;
+            
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                dates.push(getLocalDateKey(date));
+            }
+            return dates;
+        }
+
+        function formatDateShort(dateStr) {
+            const parts = dateStr.split('-');
+            return `${parseInt(parts[2])}.${parseInt(parts[1])}`;
+        }
+
+        function updateChart() {
+            const dates = getDatesForPeriod();
+            const title = document.getElementById('chartTitle');
+            const svg = document.getElementById('lineChartSvg');
+            const legendDiv = document.getElementById('chartLegend');
+            
+            const width = 800;
+            const height = 250;
+            const padding = { top: 20, right: 30, bottom: 40, left: 60 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+            
+            svg.innerHTML = '';
+            legendDiv.innerHTML = '';
+            
+            if (currentChartType === 'pressure') {
+                title.textContent = '🩸 Давление';
+                
+                const chartData = dates.map(d => {
+                    const h = healthData[d] || {};
+                    const pressure = h.pressure || '';
+                    let systolic = 0, diastolic = 0;
+                    if (pressure && pressure.includes('/')) {
+                        const parts = pressure.split('/');
+                        systolic = parseInt(parts[0]) || 0;
+                        diastolic = parseInt(parts[1]) || 0;
+                    }
+                    return { label: formatDateShort(d), systolic, diastolic };
+                });
+                
+                const allValues = chartData.flatMap(d => [d.systolic, d.diastolic]).filter(v => v > 0);
+                const maxVal = Math.max(...allValues, 1);
+                const minVal = Math.min(...allValues.filter(v => v > 0)) * 0.8 || 0;
+                const range = maxVal - minVal;
+                
+                for (let i = 0; i <= 4; i++) {
+                    const y = padding.top + (chartHeight * i / 4);
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', padding.left);
+                    line.setAttribute('y1', y);
+                    line.setAttribute('x2', width - padding.right);
+                    line.setAttribute('y2', y);
+                    line.setAttribute('class', 'chart-grid-line');
+                    svg.appendChild(line);
+                    
+                    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    label.setAttribute('x', padding.left - 10);
+                    label.setAttribute('y', y + 4);
+                    label.setAttribute('text-anchor', 'end');
+                    label.setAttribute('class', 'chart-label');
+                    const val = maxVal - (range * i / 4);
+                    label.textContent = Math.round(val);
+                    svg.appendChild(label);
+                }
+                
+                const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                xAxis.setAttribute('x1', padding.left);
+                xAxis.setAttribute('y1', height - padding.bottom);
+                xAxis.setAttribute('x2', width - padding.right);
+                xAxis.setAttribute('y2', height - padding.bottom);
+                xAxis.setAttribute('class', 'chart-axis-line');
+                svg.appendChild(xAxis);
+                
+                const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                yAxis.setAttribute('x1', padding.left);
+                yAxis.setAttribute('y1', padding.top);
+                yAxis.setAttribute('x2', padding.left);
+                yAxis.setAttribute('y2', height - padding.bottom);
+                yAxis.setAttribute('class', 'chart-axis-line');
+                svg.appendChild(yAxis);
+                
+                const barGroupWidth = chartWidth / chartData.length;
+                const barWidth = barGroupWidth * 0.35;
+                const barGap = barGroupWidth * 0.05;
+                
+                chartData.forEach((d, i) => {
+                    const groupX = padding.left + (barGroupWidth * i);
+                    
+                    if (d.systolic > 0) {
+                        const systolicHeight = ((d.systolic - minVal) / range) * chartHeight;
+                        const rect1 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect1.setAttribute('x', groupX + barGap);
+                        rect1.setAttribute('y', height - padding.bottom - systolicHeight);
+                        rect1.setAttribute('width', barWidth);
+                        rect1.setAttribute('height', systolicHeight);
+                        rect1.setAttribute('fill', '#FF6B6B');
+                        rect1.setAttribute('rx', 4);
+                        svg.appendChild(rect1);
+                        
+                        const label1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        label1.setAttribute('x', groupX + barGap + barWidth / 2);
+                        label1.setAttribute('y', height - padding.bottom - systolicHeight - 5);
+                        label1.setAttribute('text-anchor', 'middle');
+                        label1.setAttribute('class', 'chart-value-label');
+                        label1.textContent = d.systolic;
+                        svg.appendChild(label1);
+                    }
+                    
+                    if (d.diastolic > 0) {
+                        const diastolicHeight = ((d.diastolic - minVal) / range) * chartHeight;
+                        const rect2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect2.setAttribute('x', groupX + barGap + barWidth + barGap);
+                        rect2.setAttribute('y', height - padding.bottom - diastolicHeight);
+                        rect2.setAttribute('width', barWidth);
+                        rect2.setAttribute('height', diastolicHeight);
+                        rect2.setAttribute('fill', '#4FC3F7');
+                        rect2.setAttribute('rx', 4);
+                        svg.appendChild(rect2);
+                        
+                        const label2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        label2.setAttribute('x', groupX + barGap + barWidth + barGap + barWidth / 2);
+                        label2.setAttribute('y', height - padding.bottom - diastolicHeight - 5);
+                        label2.setAttribute('text-anchor', 'middle');
+                        label2.setAttribute('class', 'chart-value-label');
+                        label2.textContent = d.diastolic;
+                        svg.appendChild(label2);
+                    }
+                    
+                    const dateLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    dateLabel.setAttribute('x', groupX + barGroupWidth / 2);
+                    dateLabel.setAttribute('y', height - padding.bottom + 20);
+                    dateLabel.setAttribute('text-anchor', 'middle');
+                    dateLabel.setAttribute('class', 'chart-label');
+                    dateLabel.textContent = d.label;
+                    svg.appendChild(dateLabel);
+                });
+                
+                legendDiv.innerHTML = `
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-color" style="background: #FF6B6B;"></div>
+                        <span>Систолическое</span>
+                    </div>
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-color" style="background: #4FC3F7;"></div>
+                        <span>Диастолическое</span>
+                    </div>
+                `;
+                
+                return;
+            }
+            
+            let chartData = [];
+            let chartColor = '#4FC3F7';
+            let unit = '';
+            
+            if (currentChartType === 'steps') {
+                title.textContent = '👟 Шаги';
+                chartData = dates.map(d => ({ label: formatDateShort(d), value: stepsData[d] || 0 }));
+                chartColor = '#4FC3F7';
+            } else if (currentChartType === 'distance') {
+                title.textContent = ' Расстояние (км)';
+                chartData = dates.map(d => {
+                    const steps = stepsData[d] || 0;
+                    return { label: formatDateShort(d), value: parseFloat(calculateDistance(steps)) };
+                });
+                chartColor = '#FFD700';
+                unit = ' км';
+            } else if (currentChartType === 'burned') {
+                title.textContent = '🔥 Сожжено ккал';
+                chartData = dates.map(d => ({ label: formatDateShort(d), value: burnedData[d] || 0 }));
+                chartColor = '#FF6B6B';
+            } else if (currentChartType === 'pulse') {
+                title.textContent = '💓 Пульс';
+                chartData = dates.map(d => {
+                    const h = healthData[d] || {};
+                    return { label: formatDateShort(d), value: h.pulse || 0 };
+                });
+                chartColor = '#FF6B6B';
+            } else if (currentChartType === 'weight') {
+                title.textContent = '⚖️ Вес';
+                chartData = dates.map(d => {
+                    const h = healthData[d] || {};
+                    return { label: formatDateShort(d), value: h.weight || 0 };
+                });
+                chartColor = '#9C27B0';
+                unit = ' кг';
+            } else if (currentChartType === 'water') {
+                title.textContent = '💧 Вода';
+                chartData = dates.map(d => {
+                    const h = healthData[d] || {};
+                    return { label: formatDateShort(d), value: h.water || 0 };
+                });
+                chartColor = '#4FC3F7';
+                unit = ' мл';
+            } else if (currentChartType === 'sleep') {
+                title.textContent = '😴 Сон';
+                chartData = dates.map(d => {
+                    const h = healthData[d] || {};
+                    return { label: formatDateShort(d), value: h.sleep || 0 };
+                });
+                chartColor = '#9C27B0';
+                unit = ' ч';
+            }
+            
+            const values = chartData.map(d => d.value);
+            const maxVal = Math.max(...values, 1);
+            const minVal = Math.min(...values.filter(v => v > 0));
+            const range = maxVal - (minVal > 0 ? minVal * 0.8 : 0);
+            
+            for (let i = 0; i <= 4; i++) {
+                const y = padding.top + (chartHeight * i / 4);
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', padding.left);
+                line.setAttribute('y1', y);
+                line.setAttribute('x2', width - padding.right);
+                line.setAttribute('y2', y);
+                line.setAttribute('class', 'chart-grid-line');
+                svg.appendChild(line);
+                
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', padding.left - 10);
+                label.setAttribute('y', y + 4);
+                label.setAttribute('text-anchor', 'end');
+                label.setAttribute('class', 'chart-label');
+                const val = maxVal - (range * i / 4);
+                label.textContent = Math.round(val);
+                svg.appendChild(label);
+            }
+            
+            const xAxisLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            xAxisLine.setAttribute('x1', padding.left);
+            xAxisLine.setAttribute('y1', height - padding.bottom);
+            xAxisLine.setAttribute('x2', width - padding.right);
+            xAxisLine.setAttribute('y2', height - padding.bottom);
+            xAxisLine.setAttribute('class', 'chart-axis-line');
+            svg.appendChild(xAxisLine);
+            
+            const yAxisLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            yAxisLine.setAttribute('x1', padding.left);
+            yAxisLine.setAttribute('y1', padding.top);
+            yAxisLine.setAttribute('x2', padding.left);
+            yAxisLine.setAttribute('y2', height - padding.bottom);
+            yAxisLine.setAttribute('class', 'chart-axis-line');
+            svg.appendChild(yAxisLine);
+            
+            if (chartData.length === 0) return;
+            
+            const points = chartData.map((d, i) => {
+                const x = padding.left + (chartWidth * i / (chartData.length - 1 || 1));
+                const y = padding.top + chartHeight - ((d.value - (minVal > 0 ? minVal * 0.8 : 0)) / range * chartHeight);
+                return { x, y, value: d.value, label: d.label };
+            });
+            
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+            path.setAttribute('d', pathData);
+            path.setAttribute('class', 'chart-line');
+            path.setAttribute('stroke', chartColor);
+            svg.appendChild(path);
+            
+            points.forEach(p => {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', p.x);
+                circle.setAttribute('cy', p.y);
+                circle.setAttribute('r', 5);
+                circle.setAttribute('fill', chartColor);
+                circle.setAttribute('stroke', 'white');
+                circle.setAttribute('class', 'chart-dot');
+                svg.appendChild(circle);
+                
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', p.x);
+                label.setAttribute('y', p.y - 15);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('class', 'chart-value-label');
+                label.textContent = Math.round(p.value);
+                svg.appendChild(label);
+                
+                const dateLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                dateLabel.setAttribute('x', p.x);
+                dateLabel.setAttribute('y', height - padding.bottom + 20);
+                dateLabel.setAttribute('text-anchor', 'middle');
+                dateLabel.setAttribute('class', 'chart-label');
+                dateLabel.textContent = p.label;
+                svg.appendChild(dateLabel);
+            });
+        }
+
+        document.getElementById('workoutDate').valueAsDate = new Date();
+        document.getElementById('stepsDate').textContent = formatTodayDate();
+        
+        updateProfileDisplay();
+        updateAllDisplays();
+        updateHealthMetrics();
+        updateChart();
+    </script>
+</body>
+</html>
